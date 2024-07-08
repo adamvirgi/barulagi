@@ -1,9 +1,13 @@
 import streamlit as st
 import pandas as pd
 import joblib
+from sklearn.preprocessing import MinMaxScaler
 
 # Load the model
 model = joblib.load('model.joblib')
+
+# Initialize MinMaxScaler
+minmax = MinMaxScaler(feature_range=(0, 1))  # Adjust feature_range if needed
 
 # Define the application
 def main():
@@ -17,20 +21,17 @@ def main():
     body_height = st.number_input('Body height (cm)', min_value=0, max_value=100)
 
     # Encode the gender
-    if gender == 'Female':
-        gender = 0
-    else:
-        gender = 1
+    gender_encoded = 0 if gender == 'Female' else 1
 
     # Create a DataFrame with the input data
     input_data = pd.DataFrame({
         'Age (Month)': [age],
-        'Gender': [gender],
+        'Gender': [gender_encoded],
         'Body height': [body_height]
     })
 
     # Normalize the input data
-    input_data['Body height'] = minmax.transform(input_data['Body height'].values.reshape(-1, 1))
+    input_data['Body height'] = minmax.fit_transform(input_data[['Body height']])
 
     # Predict the status
     prediction = model.predict(input_data)[0]
